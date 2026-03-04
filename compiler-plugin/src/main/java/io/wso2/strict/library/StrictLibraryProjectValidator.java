@@ -35,6 +35,8 @@ import io.ballerina.tools.diagnostics.Location;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static io.wso2.strict.library.Constants.INIT;
 import static io.wso2.strict.library.Constants.LIBRARY;
@@ -48,8 +50,15 @@ import static io.wso2.strict.library.Constants.STRICT;
  */
 public class StrictLibraryProjectValidator implements AnalysisTask<SyntaxNodeAnalysisContext> {
 
+    private static final Set<Integer> REPORTED = ConcurrentHashMap.newKeySet();
+
     @Override
     public void perform(SyntaxNodeAnalysisContext context) {
+        int compilationId = System.identityHashCode(context.compilation());
+        if (!REPORTED.add(compilationId)) {
+            return;
+        }
+
         Location importLocation = null;
         for (Module module : context.currentPackage().modules()) {
             importLocation = findStrictLibraryImport(module);
